@@ -211,6 +211,7 @@
             margin-bottom: 1rem;
         }
     </style>
+    <script type="module" src="script.js"></script>
 </head>
 <body>
     <div class="app-container">
@@ -294,7 +295,7 @@
             </div>
 
             <div class="text-center mt-4">
-                <button class="btn btn-primary btn-lg" onclick="generateDocument()">
+                <button class="btn btn-primary btn-lg" onclick="saveToSupabase(); generateDocument();">
                     <i class="fas fa-file-alt"></i> Générer le Document
                 </button>
             </div>
