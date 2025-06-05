@@ -60,3 +60,10 @@ async function saveToSupabase() {
 
     alert('Données enregistrées avec succès dans la base de données !');
 }
+
+window.saveToSupabase = saveToSupabase;
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+    saveToSupabase();
+    generateDocument();
+});
