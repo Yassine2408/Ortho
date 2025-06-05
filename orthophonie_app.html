@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application de Suivi Orthophonique</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #e17bb7; /* Pink from logo */
+            --secondary-color: #7b8de1; /* Purple from logo */
+            --accent-color: #e17bb7;
+            --background-color: #f5f6fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background-color);
+            min-height: 100vh;
+        }
+
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-control, .form-select {
+            border: 2px solid #e9ecef;
+            padding: 0.75rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+        }
+
+        .session-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .session-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: var(--accent-color);
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .document-preview {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            background: linear-gradient(135deg, #e17bb7 0%, #7b8de1 100%);
+            padding: 1.5rem 1rem;
+            border-radius: 18px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+        }
+
+        .logo-icon {
+            display: none; /* Hide icon, will use image instead */
+        }
+
+        .logo-img {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            border-radius: 20px;
+            margin-right: 1.5rem;
+            background: #fff;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.10);
+            border: 2px solid #e17bb7;
+        }
+
+        .patient-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .sessions-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 1rem;
+        }
+
+        .sessions-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .sessions-table td {
+            padding: 1rem;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .sessions-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            .document-preview, .document-preview * {
+                visibility: visible;
+            }
+            .document-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        .print-controls {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: white;
+            padding: 1rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .total-section {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .stats-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem;
+        }
+
+        .stats-icon {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header text-center">
+            <h1><i class="fas fa-comments"></i> Application de Suivi Orthophonique</h1>
+            <p class="lead">Gérez vos séances et suivez vos patients efficacement</p>
+        </div>
+
+        <div class="form-section" id="formSection">
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <i class="fas fa-user-md stats-icon"></i>
+                        <h3>Informations du Cabinet</h3>
+                        <div class="mb-3">
+                            <label class="form-label">Nom du Cabinet</label>
+                            <input type="text" class="form-control" id="cabinetName" placeholder="Cabinet d'orthophonie...">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nom du Praticien</label>
+                            <input type="text" class="form-control" id="doctorName" placeholder="Nom de l'orthophoniste">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Adresse</label>
+                            <input type="text" class="form-control" id="address" placeholder="Adresse du cabinet">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Téléphone / Email</label>
+                            <input type="text" class="form-control" id="phone" placeholder="Téléphone et email">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="stats-card">
+                        <i class="fas fa-child stats-icon"></i>
+                        <h3>Informations du Patient</h3>
+                        <div class="mb-3">
+                            <label class="form-label">Nom de l'enfant</label>
+                            <input type="text" class="form-control" id="patientName" placeholder="Nom du patient">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Date de début de suivi</label>
+                            <input type="date" class="form-control" id="startDate">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Objectif du suivi</label>
+                            <textarea class="form-control" id="objective" rows="3" placeholder="Accompagner l'enfant dans ses difficultés scolaires..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3><i class="fas fa-calendar-alt"></i> Séances</h3>
+                    <button class="btn btn-primary" onclick="addSession()">
+                        <i class="fas fa-plus"></i> Ajouter une séance
+                    </button>
+                </div>
+                <div id="sessionsContainer"></div>
+            </div>
+
+            <div class="total-section">
+                <h4>Résumé</h4>
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Nombre total de séances:</strong> <span id="totalSessions">0</span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Montant total:</strong> <span id="totalAmount">0 DH</span></p>
+                    </div>
+                    <div class="col-md-4">
+                        <p><strong>Dernière séance:</strong> <span id="lastSession">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <button class="btn btn-primary btn-lg" onclick="generateDocument()">
+                    <i class="fas fa-file-alt"></i> Générer le Document
+                </button>
+            </div>
+        </div>
+
+        <div class="document-preview" id="previewSection" style="display: none;">
+            <div class="print-controls no-print">
+                <button class="btn btn-primary me-2" onclick="window.print()">
+                    <i class="fas fa-print"></i> Imprimer
+                </button>
+                <button class="btn btn-secondary" onclick="showForm()">
+                    <i class="fas fa-edit"></i> Modifier
+                </button>
+            </div>
+            <div id="document"></div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize with today's date
+        document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+
+        function addSession() {
+            const container = document.getElementById('sessionsContainer');
+            const sessionRow = document.createElement('div');
+            sessionRow.className = 'session-card';
+            sessionRow.innerHTML = `
+                <div class="row g-3">
+                    <div class="col-md-2">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-control session-date">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Heure</label>
+                        <input type="time" class="form-control session-time">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Type de séance</label>
+                        <select class="form-select session-type">
+                            <option value="">Sélectionner...</option>
+                            <option value="Bilan Orthophonique">Bilan Orthophonique</option>
+                            <option value="Séance de rééducation">Séance de rééducation</option>
+                            <option value="Séance de suivi">Séance de suivi</option>
+                            <option value="Entretien familial">Entretien familial</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Paiement</label>
+                        <input type="text" class="form-control session-payment" placeholder="300 DH">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Actions</label>
+                        <button class="btn btn-danger w-100" onclick="removeSession(this)">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Observations</label>
+                        <textarea class="form-control session-notes" rows="2" placeholder="Notes importantes..."></textarea>
+                    </div>
+                </div>
+            `;
+            container.appendChild(sessionRow);
+            updateSummary();
+        }
+
+        function removeSession(button) {
+            const sessionCard = button.closest('.session-card');
+            sessionCard.remove();
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const sessions = document.querySelectorAll('.session-card');
+            const totalSessions = sessions.length;
+            let totalAmount = 0;
+            let lastSession = '-';
+
+            sessions.forEach(session => {
+                const payment = session.querySelector('.session-payment').value;
+                const date = session.querySelector('.session-date').value;
+                
+                if (payment) {
+                    totalAmount += parseFloat(payment.replace(/[^0-9.-]+/g, '')) || 0;
+                }
+                
+                if (date && (!lastSession || date > lastSession)) {
+                    lastSession = date;
+                }
+            });
+
+            document.getElementById('totalSessions').textContent = totalSessions;
+            document.getElementById('totalAmount').textContent = `${totalAmount.toFixed(2)} DH`;
+            document.getElementById('lastSession').textContent = lastSession !== '-' ? formatDate(lastSession) : '-';
+        }
+
+        function generateDocument() {
+            const data = {
+                cabinetName: document.getElementById('cabinetName').value || 'Cabinet d\'orthophonie',
+                doctorName: document.getElementById('doctorName').value || 'Orthophoniste',
+                address: document.getElementById('address').value || 'Adresse du cabinet',
+                phone: document.getElementById('phone').value || 'Téléphone / Email',
+                patientName: document.getElementById('patientName').value || 'Nom du patient',
+                startDate: document.getElementById('startDate').value || new Date().toISOString().split('T')[0],
+                objective: document.getElementById('objective').value || 'Objectif du suivi à définir'
+            };
+
+            const sessions = [];
+            document.querySelectorAll('.session-card').forEach(card => {
+                const date = card.querySelector('.session-date').value;
+                const time = card.querySelector('.session-time').value;
+                const type = card.querySelector('.session-type').value;
+                const payment = card.querySelector('.session-payment').value;
+                const notes = card.querySelector('.session-notes').value;
+                
+                if (date || time || type || payment || notes) {
+                    sessions.push({ date, time, type, payment, notes });
+                }
+            });
+
+            const documentElement = document.getElementById('document');
+            documentElement.innerHTML = `
+                <div class="logo-section">
+                    <img src="logo.png" alt="Logo Orthophoniste" class="logo-img" />
+                    <div>
+                        <h2 style="font-family: 'Dancing Script', cursive; color: #bfa046; font-size: 2rem; margin-bottom: 0;">Raouia Rachid</h2>
+                        <p style="color: #bfa046; font-size: 1.2rem; margin-top: 0;">Orthophoniste</p>
+                        <p><strong>Cabinet:</strong> ${data.cabinetName}</p>
+                        <p><strong>Orthophoniste:</strong> ${data.doctorName}</p>
+                        <p>${data.address}</p>
+                        <p>${data.phone}</p>
+                    </div>
+                </div>
+
+                <h3 class="text-center mb-4">Feuille de suivi des séances – Orthophonie</h3>
+
+                <div class="patient-info-grid">
+                    <div class="info-card">
+                        <strong>Nom de l'enfant:</strong> ${data.patientName}
+                    </div>
+                    <div class="info-card">
+                        <strong>Date de début:</strong> ${formatDate(data.startDate)}
+                    </div>
+                    <div class="info-card">
+                        <strong>Nombre de séances:</strong> ${sessions.length}
+                    </div>
+                </div>
+
+                <div class="info-card mb-4">
+                    <strong>Objectif du suivi:</strong><br>
+                    ${data.objective}
+                </div>
+
+                <table class="sessions-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Heure</th>
+                            <th>Type de séance</th>
+                            <th>Paiement</th>
+                            <th>Observations</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${sessions.map(session => `
+                            <tr>
+                                <td>${formatDate(session.date)}</td>
+                                <td>${session.time}</td>
+                                <td>${session.type}</td>
+                                <td>${session.payment}</td>
+                                <td>${session.notes}</td>
+                            </tr>
+                        `).join('')}
+                        ${Array(Math.max(0, 10 - sessions.length)).fill().map(() => `
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                                <td>&nbsp;</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+
+                <div class="total-section mt-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <p><strong>Nombre total de séances:</strong> ${sessions.length}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Montant total:</strong> ${calculateTotal(sessions)} DH</p>
+                        </div>
+                        <div class="col-md-4">
+                            <p><strong>Date de génération:</strong> ${formatDate(new Date())}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('formSection').style.display = 'none';
+            document.getElementById('previewSection').style.display = 'block';
+        }
+
+        function calculateTotal(sessions) {
+            return sessions.reduce((total, session) => {
+                const amount = parseFloat(session.payment.replace(/[^0-9.-]+/g, '')) || 0;
+                return total + amount;
+            }, 0).toFixed(2);
+        }
+
+        function showForm() {
+            document.getElementById('formSection').style.display = 'block';
+            document.getElementById('previewSection').style.display = 'none';
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+        }
+
+        // Add event listeners for real-time summary updates
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('session-payment') || 
+                e.target.classList.contains('session-date')) {
+                updateSummary();
+            }
+        });
+    </script>
+</body>
+</html> 
