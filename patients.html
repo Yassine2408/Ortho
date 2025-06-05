@@ -152,8 +152,10 @@
                         <button class="btn btn-sm btn-outline-primary edit-btn"><i class="fas fa-edit"></i> Modifier</button>
                         <button class="btn btn-sm btn-success save-btn d-none"><i class="fas fa-save"></i> Enregistrer</button>
                         <button class="btn btn-sm btn-secondary cancel-btn d-none"><i class="fas fa-times"></i> Annuler</button>
+                        <button class="btn btn-sm btn-info ms-2 view-sessions-btn"><i class="fas fa-calendar-alt"></i> Voir les séances</button>
                     </td>
                 </tr>
+                <tr class="sessions-row d-none" id="sessions-${p.id}"><td colspan="4"></td></tr>
             `).join('');
         }
 
@@ -209,6 +211,55 @@
                 renderPatients(patientsData);
             } else if (e.target.closest('.cancel-btn')) {
                 renderPatients(patientsData);
+            } else if (e.target.closest('.view-sessions-btn')) {
+                // Hide all other sessions rows
+                document.querySelectorAll('.sessions-row').forEach(tr => tr.classList.add('d-none'));
+                const sessionsRow = document.getElementById(`sessions-${patient.id}`);
+                sessionsRow.classList.remove('d-none');
+                sessionsRow.firstElementChild.innerHTML = '<div class="text-center text-secondary">Chargement des séances...</div>';
+                // Fetch sessions for this patient
+                const { data: sessions, error } = await supabase
+                    .from('sessions')
+                    .select('*')
+                    .eq('patient_id', patient.id)
+                    .order('date', { ascending: true });
+                if (error) {
+                    sessionsRow.firstElementChild.innerHTML = '<div class="text-danger">Erreur lors du chargement des séances</div>';
+                    return;
+                }
+                if (!sessions.length) {
+                    sessionsRow.firstElementChild.innerHTML = '<div class="text-center text-muted">Aucune séance trouvée pour ce patient.</div>';
+                    return;
+                }
+                sessionsRow.firstElementChild.innerHTML = `
+                    <div class="card card-body mt-2 mb-2" style="background: #f8f9fa;">
+                        <h5 class="mb-3"><i class="fas fa-calendar-alt"></i> Séances de ${escapeHtml(patient.nom)}</h5>
+                        <div class="table-responsive">
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Heure</th>
+                                    <th>Type de séance</th>
+                                    <th>Paiement</th>
+                                    <th>Observations</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${sessions.map(s => `
+                                    <tr>
+                                        <td>${formatDate(s.date)}</td>
+                                        <td>${s.heure || ''}</td>
+                                        <td>${escapeHtml(s.type_seance || '')}</td>
+                                        <td>${s.paiement != null ? s.paiement + ' DH' : ''}</td>
+                                        <td>${escapeHtml(s.observations || '')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        </div>
+                    </div>
+                `;
             }
         });
 
