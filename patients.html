@@ -108,10 +108,11 @@
                     <th>Nom du patient</th>
                     <th>Date de début</th>
                     <th>Objectif du suivi</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody id="patientsBody">
-                <tr><td colspan="3" class="text-center">Chargement...</td></tr>
+                <tr><td colspan="4" class="text-center">Chargement...</td></tr>
             </tbody>
         </table>
     </div>
@@ -121,29 +122,37 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloeG9qbmJwbnBidGtxZGtwcm95Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDkwNzg4NTYsImV4cCI6MjA2NDY1NDg1Nn0.Fm6Vzo2ZrERTRDlRwbsc__-10XaCQlaKwO4iAawJWro';
         const supabase = createClient(supabaseUrl, supabaseKey);
 
+        let patientsData = [];
+
         async function fetchPatients() {
             const { data, error } = await supabase
                 .from('patients')
                 .select('*')
                 .order('nom', { ascending: true });
             if (error) {
-                document.getElementById('patientsBody').innerHTML = `<tr><td colspan="3" class="text-danger">Erreur lors du chargement</td></tr>`;
+                document.getElementById('patientsBody').innerHTML = `<tr><td colspan="4" class="text-danger">Erreur lors du chargement</td></tr>`;
                 return;
             }
+            patientsData = data;
             renderPatients(data);
         }
 
         function renderPatients(patients) {
             const tbody = document.getElementById('patientsBody');
             if (!patients.length) {
-                tbody.innerHTML = `<tr><td colspan="3" class="text-center">Aucun patient trouvé</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="text-center">Aucun patient trouvé</td></tr>`;
                 return;
             }
-            tbody.innerHTML = patients.map(p => `
-                <tr>
-                    <td>${p.nom}</td>
-                    <td>${formatDate(p.date_debut)}</td>
-                    <td>${p.objectif || ''}</td>
+            tbody.innerHTML = patients.map((p, idx) => `
+                <tr data-id="${p.id}" data-idx="${idx}">
+                    <td class="nom">${escapeHtml(p.nom)}</td>
+                    <td class="date_debut">${formatDate(p.date_debut)}</td>
+                    <td class="objectif">${escapeHtml(p.objectif || '')}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary edit-btn"><i class="fas fa-edit"></i> Modifier</button>
+                        <button class="btn btn-sm btn-success save-btn d-none"><i class="fas fa-save"></i> Enregistrer</button>
+                        <button class="btn btn-sm btn-secondary cancel-btn d-none"><i class="fas fa-times"></i> Annuler</button>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -158,14 +167,49 @@
             });
         }
 
+        function escapeHtml(text) {
+            return text ? text.replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','\'':'&#39;','"':'&quot;'}[c])) : '';
+        }
+
         document.getElementById('searchInput').addEventListener('input', async function() {
             const search = this.value.toLowerCase();
-            const { data } = await supabase
-                .from('patients')
-                .select('*')
-                .order('nom', { ascending: true });
-            const filtered = data.filter(p => p.nom.toLowerCase().includes(search));
+            const filtered = patientsData.filter(p => p.nom.toLowerCase().includes(search));
             renderPatients(filtered);
+        });
+
+        document.getElementById('patientsBody').addEventListener('click', async function(e) {
+            const row = e.target.closest('tr');
+            if (!row) return;
+            const idx = row.getAttribute('data-idx');
+            const patient = patientsData[idx];
+            if (e.target.closest('.edit-btn')) {
+                // Switch to edit mode
+                row.querySelector('.nom').innerHTML = `<input type="text" class="form-control form-control-sm" value="${escapeHtml(patient.nom)}">`;
+                row.querySelector('.date_debut').innerHTML = `<input type="date" class="form-control form-control-sm" value="${patient.date_debut}">`;
+                row.querySelector('.objectif').innerHTML = `<input type="text" class="form-control form-control-sm" value="${escapeHtml(patient.objectif || '')}">`;
+                row.querySelector('.edit-btn').classList.add('d-none');
+                row.querySelector('.save-btn').classList.remove('d-none');
+                row.querySelector('.cancel-btn').classList.remove('d-none');
+            } else if (e.target.closest('.save-btn')) {
+                // Save changes
+                const newNom = row.querySelector('.nom input').value.trim();
+                const newDate = row.querySelector('.date_debut input').value;
+                const newObj = row.querySelector('.objectif input').value.trim();
+                const id = row.getAttribute('data-id');
+                const { error } = await supabase
+                    .from('patients')
+                    .update({ nom: newNom, date_debut: newDate, objectif: newObj })
+                    .eq('id', id);
+                if (error) {
+                    alert('Erreur lors de la sauvegarde : ' + error.message);
+                    return;
+                }
+                // Update local data and re-render
+                patientsData[idx] = { ...patientsData[idx], nom: newNom, date_debut: newDate, objectif: newObj };
+                renderPatients(patientsData);
+            } else if (e.target.closest('.cancel-btn')) {
+                renderPatients(patientsData);
+            }
         });
 
         fetchPatients();
