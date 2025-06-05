@@ -194,7 +194,8 @@
                 row.querySelector('.save-btn').classList.remove('d-none');
                 row.querySelector('.cancel-btn').classList.remove('d-none');
             } else if (e.target.closest('.save-btn')) {
-                // Save changes
+                // Save changes with confirmation
+                if (!confirm('Voulez-vous enregistrer les modifications de ce patient ?')) return;
                 const newNom = row.querySelector('.nom input').value.trim();
                 const newDate = row.querySelector('.date_debut input').value;
                 const newObj = row.querySelector('.objectif input').value.trim();
@@ -207,6 +208,7 @@
                     alert('Erreur lors de la sauvegarde : ' + error.message);
                     return;
                 }
+                alert('Modifications enregistrées avec succès !');
                 // Update local data and re-render
                 patientsData[idx] = { ...patientsData[idx], nom: newNom, date_debut: newDate, objectif: newObj };
                 renderPatients(patientsData);
@@ -220,6 +222,7 @@
                         alert('Erreur lors de la suppression : ' + error.message);
                         return;
                     }
+                    alert('Patient supprimé avec succès !');
                     patientsData = patientsData.filter(p => p.id !== id);
                     renderPatients(patientsData);
                 }
@@ -294,6 +297,7 @@
                 // Add event listener for adding session
                 sessionsRow.querySelector('.add-session-form').onsubmit = async function(ev) {
                     ev.preventDefault();
+                    if (!confirm('Voulez-vous ajouter cette séance ?')) return;
                     const date = this.querySelector('.session-date').value;
                     const heure = this.querySelector('.session-heure').value;
                     const type_seance = this.querySelector('.session-type').value;
@@ -304,6 +308,7 @@
                         alert('Erreur lors de l\'ajout de la séance : ' + error.message);
                         return;
                     }
+                    alert('Séance ajoutée avec succès !');
                     // Refresh sessions
                     e.target.closest('.view-sessions-btn').click();
                 };
@@ -325,6 +330,7 @@
                             <td><button class='btn btn-sm btn-success save-session-btn'><i class='fas fa-save'></i></button> <button class='btn btn-sm btn-secondary cancel-session-btn'><i class='fas fa-times'></i></button></td>
                         `;
                         tr.querySelector('.save-session-btn').onclick = async function() {
+                            if (!confirm('Voulez-vous enregistrer les modifications de cette séance ?')) return;
                             const newDate = tr.querySelector('input[type=date]').value;
                             const newHeure = tr.querySelector('input[type=time]').value;
                             const newType = tr.querySelectorAll('input')[2].value;
@@ -332,6 +338,7 @@
                             const newObs = tr.querySelectorAll('input')[4].value;
                             const { error } = await supabase.from('sessions').update({ date: newDate, heure: newHeure, type_seance: newType, paiement: newPaiement, observations: newObs }).eq('id', sessions[sIdx].id);
                             if (error) { alert('Erreur lors de la sauvegarde : ' + error.message); return; }
+                            alert('Séance modifiée avec succès !');
                             e.target.closest('.view-sessions-btn').click();
                         };
                         tr.querySelector('.cancel-session-btn').onclick = function() {
@@ -344,6 +351,7 @@
                         if (confirm('Voulez-vous vraiment supprimer cette séance ?')) {
                             const { error } = await supabase.from('sessions').delete().eq('id', sessions[sIdx].id);
                             if (error) { alert('Erreur lors de la suppression : ' + error.message); return; }
+                            alert('Séance supprimée avec succès !');
                             e.target.closest('.view-sessions-btn').click();
                         }
                     };
@@ -363,11 +371,13 @@
         document.querySelector('.header').after(addPatientForm);
         addPatientForm.onsubmit = async function(ev) {
             ev.preventDefault();
+            if (!confirm('Voulez-vous ajouter ce patient ?')) return;
             const nom = this.querySelector('input[type=text]').value.trim();
             const date_debut = this.querySelector('input[type=date]').value;
             const objectif = this.querySelectorAll('input[type=text]')[1].value.trim();
             const { error } = await supabase.from('patients').insert([{ nom, date_debut, objectif }]);
             if (error) { alert('Erreur lors de l\'ajout du patient : ' + error.message); return; }
+            alert('Patient ajouté avec succès !');
             fetchPatients();
             this.reset();
         };
