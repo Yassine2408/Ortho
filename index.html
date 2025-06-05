@@ -227,19 +227,23 @@
                         <h3>Informations du Cabinet</h3>
                         <div class="mb-3">
                             <label class="form-label">Nom du Cabinet</label>
-                            <input type="text" class="form-control" id="cabinetName" placeholder="Cabinet d'orthophonie...">
+                            <div class="form-control-plaintext fw-bold">Cabinet d'orthophonie Raouia Rachid</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Nom du Praticien</label>
-                            <input type="text" class="form-control" id="doctorName" placeholder="Nom de l'orthophoniste">
+                            <label class="form-label">Nom de l'Orthophoniste</label>
+                            <div class="form-control-plaintext fw-bold">Raouia Rachid</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Adresse</label>
-                            <input type="text" class="form-control" id="address" placeholder="Adresse du cabinet">
+                            <div class="form-control-plaintext">N°27 NAKHLA 1 BANDE (APPT 2) EL KELAA DES SRAGHNA(M)</div>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label">Téléphone / Email</label>
-                            <input type="text" class="form-control" id="phone" placeholder="Téléphone et email">
+                            <label class="form-label">Téléphone</label>
+                            <div class="form-control-plaintext">0708878697</div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <div class="form-control-plaintext">Raouia.orthophonie@gmail.com</div>
                         </div>
                     </div>
                 </div>
@@ -389,10 +393,11 @@
 
         function generateDocument() {
             const data = {
-                cabinetName: document.getElementById('cabinetName').value || 'Cabinet d\'orthophonie',
-                doctorName: document.getElementById('doctorName').value || 'Orthophoniste',
-                address: document.getElementById('address').value || 'Adresse du cabinet',
-                phone: document.getElementById('phone').value || 'Téléphone / Email',
+                cabinetName: "Cabinet d'orthophonie Raouia Rachid",
+                doctorName: "Raouia Rachid",
+                address: "N°27 NAKHLA 1 BANDE (APPT 2) EL KELAA DES SRAGHNA(M)",
+                phone: "0708878697",
+                email: "Raouia.orthophonie@gmail.com",
                 patientName: document.getElementById('patientName').value || 'Nom du patient',
                 startDate: document.getElementById('startDate').value || new Date().toISOString().split('T')[0],
                 objective: document.getElementById('objective').value || 'Objectif du suivi à définir'
@@ -418,10 +423,9 @@
                     <div>
                         <h2 style="font-family: 'Dancing Script', cursive; color: #bfa046; font-size: 2rem; margin-bottom: 0;">Raouia Rachid</h2>
                         <p style="color: #bfa046; font-size: 1.2rem; margin-top: 0;">Orthophoniste</p>
-                        <p><strong>Cabinet:</strong> ${data.cabinetName}</p>
-                        <p><strong>Orthophoniste:</strong> ${data.doctorName}</p>
-                        <p>${data.address}</p>
-                        <p>${data.phone}</p>
+                        <p><strong>Cabinet d'orthophonie Raouia Rachid</strong></p>
+                        <p>N°27 NAKHLA 1 BANDE (APPT 2) EL KELAA DES SRAGHNA(M)</p>
+                        <p>0708878697 / Raouia.orthophonie@gmail.com</p>
                     </div>
                 </div>
 
