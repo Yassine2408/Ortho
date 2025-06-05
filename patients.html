@@ -153,6 +153,7 @@
                         <button class="btn btn-sm btn-success save-btn d-none"><i class="fas fa-save"></i> Enregistrer</button>
                         <button class="btn btn-sm btn-secondary cancel-btn d-none"><i class="fas fa-times"></i> Annuler</button>
                         <button class="btn btn-sm btn-info ms-2 view-sessions-btn"><i class="fas fa-calendar-alt"></i> Voir les séances</button>
+                        <button class="btn btn-sm btn-danger ms-2 delete-patient-btn"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
                 <tr class="sessions-row d-none" id="sessions-${p.id}"><td colspan="4"></td></tr>
@@ -211,6 +212,17 @@
                 renderPatients(patientsData);
             } else if (e.target.closest('.cancel-btn')) {
                 renderPatients(patientsData);
+            } else if (e.target.closest('.delete-patient-btn')) {
+                if (confirm('Voulez-vous vraiment supprimer ce patient et toutes ses séances ?')) {
+                    const id = row.getAttribute('data-id');
+                    const { error } = await supabase.from('patients').delete().eq('id', id);
+                    if (error) {
+                        alert('Erreur lors de la suppression : ' + error.message);
+                        return;
+                    }
+                    patientsData = patientsData.filter(p => p.id !== id);
+                    renderPatients(patientsData);
+                }
             } else if (e.target.closest('.view-sessions-btn')) {
                 // Hide all other sessions rows
                 document.querySelectorAll('.sessions-row').forEach(tr => tr.classList.add('d-none'));
@@ -260,8 +272,105 @@
                         </div>
                     </div>
                 `;
+                // Add session form
+                sessionsRow.firstElementChild.innerHTML += `
+                    <form class="row g-2 align-items-end add-session-form mt-3">
+                        <div class="col-md-2"><input type="date" class="form-control form-control-sm session-date" required></div>
+                        <div class="col-md-2"><input type="time" class="form-control form-control-sm session-heure"></div>
+                        <div class="col-md-3">
+                            <select class="form-select form-select-sm session-type">
+                                <option value="">Type de séance...</option>
+                                <option value="Bilan Orthophonique">Bilan Orthophonique</option>
+                                <option value="Séance de rééducation">Séance de rééducation</option>
+                                <option value="Séance de suivi">Séance de suivi</option>
+                                <option value="Entretien familial">Entretien familial</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2"><input type="number" class="form-control form-control-sm session-paiement" placeholder="Paiement"></div>
+                        <div class="col-md-2"><input type="text" class="form-control form-control-sm session-observations" placeholder="Observations"></div>
+                        <div class="col-md-1"><button type="submit" class="btn btn-sm btn-success"><i class="fas fa-plus"></i></button></div>
+                    </form>
+                `;
+                // Add event listener for adding session
+                sessionsRow.querySelector('.add-session-form').onsubmit = async function(ev) {
+                    ev.preventDefault();
+                    const date = this.querySelector('.session-date').value;
+                    const heure = this.querySelector('.session-heure').value;
+                    const type_seance = this.querySelector('.session-type').value;
+                    const paiement = parseFloat(this.querySelector('.session-paiement').value) || 0;
+                    const observations = this.querySelector('.session-observations').value;
+                    const { error } = await supabase.from('sessions').insert([{ patient_id: patient.id, date, heure, type_seance, paiement, observations }]);
+                    if (error) {
+                        alert('Erreur lors de l\'ajout de la séance : ' + error.message);
+                        return;
+                    }
+                    // Refresh sessions
+                    e.target.closest('.view-sessions-btn').click();
+                };
+                // Add edit/delete listeners for sessions
+                sessionsRow.querySelectorAll('table tbody tr').forEach((sessionTr, sIdx) => {
+                    sessionTr.innerHTML += `<td><button class='btn btn-sm btn-outline-primary edit-session-btn'><i class='fas fa-edit'></i></button> <button class='btn btn-sm btn-danger delete-session-btn'><i class='fas fa-trash'></i></button></td>`;
+                });
+                sessionsRow.querySelectorAll('.edit-session-btn').forEach((btn, sIdx) => {
+                    btn.onclick = function() {
+                        const tr = btn.closest('tr');
+                        const tds = tr.querySelectorAll('td');
+                        const orig = Array.from(tds).map(td => td.textContent);
+                        tr.innerHTML = `
+                            <td><input type='date' class='form-control form-control-sm' value='${sessions[sIdx].date}'></td>
+                            <td><input type='time' class='form-control form-control-sm' value='${sessions[sIdx].heure || ''}'></td>
+                            <td><input type='text' class='form-control form-control-sm' value='${escapeHtml(sessions[sIdx].type_seance || '')}'></td>
+                            <td><input type='number' class='form-control form-control-sm' value='${sessions[sIdx].paiement || ''}'></td>
+                            <td><input type='text' class='form-control form-control-sm' value='${escapeHtml(sessions[sIdx].observations || '')}'></td>
+                            <td><button class='btn btn-sm btn-success save-session-btn'><i class='fas fa-save'></i></button> <button class='btn btn-sm btn-secondary cancel-session-btn'><i class='fas fa-times'></i></button></td>
+                        `;
+                        tr.querySelector('.save-session-btn').onclick = async function() {
+                            const newDate = tr.querySelector('input[type=date]').value;
+                            const newHeure = tr.querySelector('input[type=time]').value;
+                            const newType = tr.querySelectorAll('input')[2].value;
+                            const newPaiement = parseFloat(tr.querySelectorAll('input')[3].value) || 0;
+                            const newObs = tr.querySelectorAll('input')[4].value;
+                            const { error } = await supabase.from('sessions').update({ date: newDate, heure: newHeure, type_seance: newType, paiement: newPaiement, observations: newObs }).eq('id', sessions[sIdx].id);
+                            if (error) { alert('Erreur lors de la sauvegarde : ' + error.message); return; }
+                            e.target.closest('.view-sessions-btn').click();
+                        };
+                        tr.querySelector('.cancel-session-btn').onclick = function() {
+                            e.target.closest('.view-sessions-btn').click();
+                        };
+                    };
+                });
+                sessionsRow.querySelectorAll('.delete-session-btn').forEach((btn, sIdx) => {
+                    btn.onclick = async function() {
+                        if (confirm('Voulez-vous vraiment supprimer cette séance ?')) {
+                            const { error } = await supabase.from('sessions').delete().eq('id', sessions[sIdx].id);
+                            if (error) { alert('Erreur lors de la suppression : ' + error.message); return; }
+                            e.target.closest('.view-sessions-btn').click();
+                        }
+                    };
+                });
             }
         });
+
+        // Add patient form
+        const addPatientForm = document.createElement('form');
+        addPatientForm.className = 'row g-2 align-items-end mb-4';
+        addPatientForm.innerHTML = `
+            <div class="col-md-4"><input type="text" class="form-control form-control-sm" placeholder="Nom du patient" required></div>
+            <div class="col-md-3"><input type="date" class="form-control form-control-sm" required></div>
+            <div class="col-md-4"><input type="text" class="form-control form-control-sm" placeholder="Objectif du suivi"></div>
+            <div class="col-md-1"><button type="submit" class="btn btn-sm btn-success"><i class="fas fa-plus"></i> Ajouter</button></div>
+        `;
+        document.querySelector('.header').after(addPatientForm);
+        addPatientForm.onsubmit = async function(ev) {
+            ev.preventDefault();
+            const nom = this.querySelector('input[type=text]').value.trim();
+            const date_debut = this.querySelector('input[type=date]').value;
+            const objectif = this.querySelectorAll('input[type=text]')[1].value.trim();
+            const { error } = await supabase.from('patients').insert([{ nom, date_debut, objectif }]);
+            if (error) { alert('Erreur lors de l\'ajout du patient : ' + error.message); return; }
+            fetchPatients();
+            this.reset();
+        };
 
         fetchPatients();
     </script>
